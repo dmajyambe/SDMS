@@ -35,16 +35,18 @@ if data is not None:
 
    # @st.cache_resource()
     def schools_by_school_owner(data):
-       # print("reaches the schools by owner function")
-        # Count the number of schools by school owner
+            # Count the number of schools by school owner
         school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
 
-        # Sort the DataFrame in descending order based on the school count
+            # Sort the DataFrame in descending order based on the school count
         school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
 
-        # Plotting
+            # Plotting
         plt.figure(figsize=(8, 6))
+            
+            # Use 'index' as the column name for the x-axis
         ax = sns.barplot(data=school_count_by_owner, x='index', y='school_count', palette="Set1", order=school_count_by_owner['index'])
+            
         plt.xlabel('School Owner')
         plt.ylabel('Number of Schools')
         plt.title('Number of Schools')
@@ -52,6 +54,7 @@ if data is not None:
         plt.grid(visible=False)
 
         return plt
+
     #schools_by_school_owner(data)
 
 #     #double shift
