@@ -34,19 +34,20 @@ if data is not None:
         return plt 
 
    # @st.cache_resource()
+
     def schools_by_school_owner(data):
-            # Count the number of schools by school owner
+        # Count the number of schools by school owner
         school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
 
-            # Sort the DataFrame in descending order based on the school count
+        # Sort the DataFrame in descending order based on the school count
         school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
 
-            # Plotting
+        # Plotting with matplotlib
         plt.figure(figsize=(8, 6))
-            
-            # Use 'index' as the column name for the x-axis
-        ax = sns.barplot(data=school_count_by_owner, x='index', y='school_count', palette="Set1", order=school_count_by_owner['index'])
-            
+
+        # Use 'index' as the column name for the x-axis
+        plt.bar(school_count_by_owner['index'], school_count_by_owner['school_count'], color="skyblue")
+
         plt.xlabel('School Owner')
         plt.ylabel('Number of Schools')
         plt.title('Number of Schools')
