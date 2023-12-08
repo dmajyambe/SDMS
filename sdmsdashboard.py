@@ -1,6 +1,6 @@
 import streamlit as st
 st.set_page_config(
-    page_icon=":school:",
+    page_icon=":flag-rw:",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items=None
@@ -500,6 +500,8 @@ if category == "SCHOOL INFRASTRUCTURE":
 
     with tab1:
         st.write("Schools by school owner")
+        st.write("Under maintenance :exclamation:")
+
         # def schools_by_school_owner(data):
         #     school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
 
