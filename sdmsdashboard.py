@@ -35,26 +35,6 @@ if data is not None:
 
    # @st.cache_resource()
 
-    def schools_by_school_owner(data):
-        # Count the number of schools by school owner
-        school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
-
-        # Sort the DataFrame in descending order based on the school count
-        school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
-
-        # Plotting with matplotlib
-        plt.figure(figsize=(8, 6))
-
-        # Use 'index' as the column name for the x-axis
-        plt.bar(school_count_by_owner['index'], school_count_by_owner['school_count'], color="skyblue")
-
-        plt.xlabel('School Owner')
-        plt.ylabel('Number of Schools')
-        plt.title('Number of Schools')
-        plt.xticks(rotation=45, ha='right')
-        plt.grid(visible=False)
-
-        return plt
 
     #schools_by_school_owner(data)
 
@@ -520,7 +500,26 @@ if category == "SCHOOL INFRASTRUCTURE":
 
     with tab1:
         st.write("Schools by school owner")
-        st.pyplot(schools_by_school_owner(data))
+        # def schools_by_school_owner(data):
+        #     school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
+
+        #     # Sort the DataFrame in descending order based on the school count
+        #     school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
+
+        #     # Plotting with matplotlib
+        #     fig, ax = plt.subplots(figsize=(8, 6))
+
+        #     # Use the index directly for the x-axis labels
+        #     ax.bar(school_count_by_owner.index, school_count_by_owner['school_count'], color="skyblue")
+
+        #     ax.set_xlabel('School Owner')
+        #     ax.set_ylabel('Number of Schools')
+        #     ax.set_title('Number of Schools')
+        #     plt.xticks(rotation=45, ha='right')
+        #     plt.grid(visible=False)
+
+        #     st.pyplot(fig)
+        # schools_by_school_owner(data)
 
     with tab2:
         st.write("Schools boarding status")
