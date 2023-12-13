@@ -498,25 +498,20 @@ if category == "SCHOOL INFRASTRUCTURE":
 
         def schools_by_school_owner(data):
             school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
-
             # Sort the DataFrame in descending order based on the school count
             school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
-
-            # Plotting with matplotlib
+            # Plotting 
             fig, ax = plt.subplots(figsize=(8, 6))
-
-            # Use the index directly for the x-axis labels
             ax.bar(school_count_by_owner.index, school_count_by_owner['school_count'], color="skyblue")
-
             ax.set_xlabel('School Owner')
             ax.set_ylabel('Number of Schools')
             ax.set_title('Number of Schools')
-            
-            # Correct usage for setting x-axis ticks
             ax.set_xticks(school_count_by_owner.index)
             ax.set_xticklabels(school_count_by_owner['index'], rotation=45, ha='right')
             plt.grid(visible=False)
-            return plt
+
+            return fig
+
         st.pyplot(schools_by_school_owner(data))
 
     with tab2:
