@@ -380,15 +380,9 @@ else:
     print("No data available.")
 
 
-#streamlit app 
-# Display the dataset preview
-st.write("### Dataset Preview:")
-st.write(data.head())
 
 with st.sidebar:
-    category = st.sidebar.radio("Show dashboard for: ", ["SCHOOL INFRASTRUCTURE", "STUDENTS", "SCHOOL STAFF", "ENERGY, WATER AND SANITATION","BOOKS AND TEXTBOOKS","ICT, SCIENCE AND TECHNOLOGY","SCHOOL NUTRITION","SPECIAL NEEDS EDUCATION"])
-
-#checkbox = st.sidebar.checkbox("Show infrastructure dashboard") #add checkbox as widget 
+    category = st.sidebar.radio("Show dashboard for: ", ["SCHOOL INFRASTRUCTURE", "STUDENTS", "SCHOOL STAFF", "ENERGY, WATER AND SANITATION","BOOKS AND TEXTBOOKS","ICT, SCIENCE AND TECHNOLOGY","SPECIAL NEEDS EDUCATION"])
 if category == "SCHOOL INFRASTRUCTURE":
     with open('style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -500,28 +494,30 @@ if category == "SCHOOL INFRASTRUCTURE":
 
     with tab1:
         st.write("Schools by school owner")
-        st.write("Under maintenance :exclamation:")
+        #st.write("Under maintenance :exclamation:")
 
-        # def schools_by_school_owner(data):
-        #     school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
+        def schools_by_school_owner(data):
+            school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
 
-        #     # Sort the DataFrame in descending order based on the school count
-        #     school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
+            # Sort the DataFrame in descending order based on the school count
+            school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
 
-        #     # Plotting with matplotlib
-        #     fig, ax = plt.subplots(figsize=(8, 6))
+            # Plotting with matplotlib
+            fig, ax = plt.subplots(figsize=(8, 6))
 
-        #     # Use the index directly for the x-axis labels
-        #     ax.bar(school_count_by_owner.index, school_count_by_owner['school_count'], color="skyblue")
+            # Use the index directly for the x-axis labels
+            ax.bar(school_count_by_owner.index, school_count_by_owner['school_count'], color="skyblue")
 
-        #     ax.set_xlabel('School Owner')
-        #     ax.set_ylabel('Number of Schools')
-        #     ax.set_title('Number of Schools')
-        #     plt.xticks(rotation=45, ha='right')
-        #     plt.grid(visible=False)
-
-        #     st.pyplot(fig)
-        # schools_by_school_owner(data)
+            ax.set_xlabel('School Owner')
+            ax.set_ylabel('Number of Schools')
+            ax.set_title('Number of Schools')
+            
+            # Correct usage for setting x-axis ticks
+            ax.set_xticks(school_count_by_owner.index)
+            ax.set_xticklabels(school_count_by_owner['index'], rotation=45, ha='right')
+            plt.grid(visible=False)
+            return plt
+        st.pyplot(schools_by_school_owner(data))
 
     with tab2:
         st.write("Schools boarding status")
@@ -745,13 +741,76 @@ elif category=="ICT, SCIENCE AND TECHNOLOGY":
 
     total_computers = data['total_computers'].sum()
     #st.write(f"Total Computers: {total_computers}")
-    a1.metric("Total student Computers", f"{total_computers}") # sum of total_computers
-
-    # Calculate and display the user-to-computer ratio
+    a1.metric("Total student Computers", f"{total_computers:,.0f}")  
     total_students = data['total_students'].sum()
     user_to_computer_ratio =round( total_students / total_computers,0)
     #st.write(f"User-to-Computer Ratio: {user_to_computer_ratio:.2f}")
-    a2.metric("Pupil Computer Ratio", f"{user_to_computer_ratio:.2f}")
+    a2.metric("Pupil Computer Ratio", f"{round(user_to_computer_ratio)}")
+    def plot_ict_schools_by_district(data_path, title="Schools Using ICT"):
+        
+        # Filter and count schools using ICT
+        ict_schools = data[data["using_ict_for_teaching_and_learning"] == 1]
+        ict_counts = ict_schools.groupby("district")["school_name"].count()
+
+        # Sort counts in descending order
+        ict_counts_sorted = ict_counts.sort_values(ascending=False)
+
+        # Create bar chart
+        plt.figure(figsize=(10, 6))
+        plt.bar(ict_counts_sorted.index, ict_counts_sorted.values, color="skyblue")
+        #plt.xlabel("District")
+        plt.ylabel("Number of Schools Using ICT")
+        plt.title(title)
+        plt.xticks(rotation=45, ha="right")
+        plt.grid(visible=False)
+
+        # Show plot
+        plt.tight_layout()
+        return plt
+    st.pyplot(plot_ict_schools_by_district(data_path=data))
+    def plot_smart_classrooms_per_district(data):
+        if 'smart_classrooms' in data.columns:
+            # Count the number of smart classrooms per district
+            smart_classrooms_per_district = data.groupby('district')['smart_classrooms'].sum().reset_index()
+            smart_classrooms_per_district = smart_classrooms_per_district.sort_values(by='smart_classrooms', ascending=False)
+            plt.figure(figsize=(10, 6))
+            plt.bar(smart_classrooms_per_district['district'], smart_classrooms_per_district['smart_classrooms'], color='skyblue')
+            plt.ylabel('Number of Smart Classrooms')
+            plt.title('Smart Classrooms ')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.grid(visible=False)
+            return plt
+            
+        else:
+            print("The 'smart_classrooms' column is not available in the dataset.")
+
+    st.pyplot(plot_smart_classrooms_per_district(data))
+else:
+    st.write("Schools with a special girls room")
+
+    def plot_schools_with_special_girls_room(data):
+        if 'specialgirlsroom' in data.columns:
+            total_schools_per_district = data.groupby('district').size().reset_index(name='total_schools')
+            schools_with_special_girls_room = data[data['specialgirlsroom'] == 1].groupby('district').size().reset_index(name='special_girls_schools')
+            merged_data = pd.merge(total_schools_per_district, schools_with_special_girls_room, how='left', on='district')
+            merged_data['special_girls_schools'] = merged_data['special_girls_schools'].fillna(0)
+            merged_data = merged_data.sort_values(by='total_schools', ascending=False)
+
+            # Plotting
+            plt.figure(figsize=(12, 6))
+            plt.bar(merged_data['district'], merged_data['total_schools'], color='lightgray', label='Total Schools')
+            plt.bar(merged_data['district'], merged_data['special_girls_schools'], color='skyblue', label='Special Girls Schools')
+            #plt.xlabel('District')
+            plt.ylabel('Number of Schools')
+            plt.title('Schools with special girls room')
+            plt.xticks(rotation=45, ha='right')
+            plt.legend()
+            plt.tight_layout()
+            plt.grid(visible=False)
+            return plt
+        else:
+            print("The 'specialgirlsroom' column is not available in the dataset.")
 
 
-
+    st.pyplot(plot_schools_with_special_girls_room(data))

@@ -1,7 +1,92 @@
-streamlit
-plotly
-matplotlib
-seaborn
-pandas
-numpy
-openpyxl
+DROP DATABASE IF EXISTS RWACOF;
+CREATE DATABASE RWACOF;
+USE RWACOF;
+#Shift No	Date	Activity	Status	Grade	Total Bags	Total Kgs	GRN/Batch No
+
+DROP TABLE IF EXISTS operation;
+CREATE TABLE operation (
+    shift_number text,
+	Date date,
+    Activity text,	
+    Status text,
+    Grade text,
+    Total_Bags int,
+    Total_Kgs int,
+    Batch_No text
+	);
+    
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Sheet1.csv'
+INTO TABLE operation
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM operation;
+#loading sheet2
+DROP TABLE IF EXISTS operation1;
+CREATE TABLE operation1 (
+    shift_number text,
+    supplier text,
+	Date date,
+    Activity text,	
+    Status text,
+    Grade text,
+    Total_Bags int,
+    Total_Kgs int,
+    Batch_No text,
+    cell text
+    
+	);
+    
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Sheet2.csv'
+INTO TABLE operation1
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+-- SELECT * FROM operation1;
+#loading sheet3
+#
+DROP TABLE IF EXISTS mid_operation2;
+CREATE TABLE mid_operation2 (
+    shift_number text,
+	Date date,
+    Activity text,	
+    Status text,
+    Grade text,
+    Total_Bags int,
+    Total_Kgs int,
+    Batch_No text,
+    supplier text,
+    cell text
+    
+	);
+    
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Sheet3.csv'
+INTO TABLE mid_operation2
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM mid_operation2;
+CREATE TABLE operation2 AS SELECT shift_number,supplier,Date,Activity,Status,Grade,Total_Bags,Total_Kgs,Batch_No,cell FROM mid_operation2;
+SELECT * FROM operation2;
+
+#union of operation1 and operation2 tables
+CREATE TABLE merged_operation1_2 AS 
+SELECT shift_number,supplier,Date,Activity,Status,Grade,Total_Bags,Total_Kgs,Batch_No,cell
+FROM operation1
+UNION
+SELECT shift_number,supplier,Date,Activity,Status,Grade,Total_Bags,Total_Kgs,Batch_No,cell
+FROM operation2;
+SELECT * FROM merged_operation1_2;
+#Shift No	Date	Activity	Status	Grade	Total Bags	Total Kgs	GRN/Batch No
+CREATE TABLE test_data AS 
+SELECT shift_number,supplier,Date,Activity,Status,Grade,Total_Bags,Total_Kgs,Batch_No,cell
+FROM merged_operation1_2
+UNION
+SELECT shift_number,NULL AS supplier,Date,Activity,Status,Grade,Total_Bags,Total_Kgs,Batch_No,NULL AS cell
+FROM operation;
+SELECT * FROM test_data;
+
+#CHECK DUPLICATES 
