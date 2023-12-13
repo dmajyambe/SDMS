@@ -490,31 +490,8 @@ if category == "SCHOOL INFRASTRUCTURE":
         if show_table:
          st.table(schools_count) # show table for schools by school setting 
     #create tabs for different categories
-    tab1, tab2, tab3,tab4,tab5 = st.tabs(["School owner", "Boarding status", "Shift program","Classrooms","Desks"])
-
+    tab1, tab2, tab3,tab4, = st.tabs([ "Boarding status", "Shift program","Classrooms","Desks"])
     with tab1:
-        st.write("Schools by school owner")
-        #st.write("Under maintenance :exclamation:")
-
-        def schools_by_school_owner(data):
-            school_count_by_owner = data['school_owner'].value_counts().reset_index(name='school_count')
-            # Sort the DataFrame in descending order based on the school count
-            school_count_by_owner = school_count_by_owner.sort_values(by='school_count', ascending=False)
-            # Plotting 
-            fig, ax = plt.subplots(figsize=(8, 6))
-            ax.bar(school_count_by_owner.index, school_count_by_owner['school_count'], color="skyblue")
-            ax.set_xlabel('School Owner')
-            ax.set_ylabel('Number of Schools')
-            ax.set_title('Number of Schools')
-            ax.set_xticks(school_count_by_owner.index)
-            ax.set_xticklabels(school_count_by_owner['index'], rotation=45, ha='right')
-            plt.grid(visible=False)
-
-            return fig
-
-        st.pyplot(schools_by_school_owner(data))
-
-    with tab2:
         st.write("Schools boarding status")
         boarding_status_counts = data['boarding_status'].value_counts()
             # Create a donut chart
@@ -528,10 +505,10 @@ if category == "SCHOOL INFRASTRUCTURE":
             empty_boarding_status = data[data['boarding_status'].isna()]
             st.table(empty_boarding_status['school_name'])
 
-    with tab3:
+    with tab2:
         st.write("Schools with doubleshift")
         st.pyplot(double_shift(data))
-    with tab4:
+    with tab3:
         #classrooms_checkbox = st.checkbox("Show classrooms in use", value=True)
         #classrooms_not_in_use_chec=st.checkbox("Show classrooms not in use",value=True)
         #if classrooms_checkbox:
@@ -540,7 +517,7 @@ if category == "SCHOOL INFRASTRUCTURE":
         #if classrooms_not_in_use_chec:
         st.write("Classrooms not in use per district")
         st.pyplot(plot_classrooms_not_in_use(data))
-    with tab5:
+    with tab4:
         st.write("Desks not in use per district")
         st.pyplot(desks_not_in_use_plot(data))
         show_table3=st.checkbox("Check to show schools with desks not in use")
