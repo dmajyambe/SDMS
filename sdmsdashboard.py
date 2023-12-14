@@ -180,7 +180,10 @@ if data is not None:
             ax.bar(category, df[male_col].sum(), label='Male', color='blue')
             ax.bar(category, df[female_col].sum(), bottom=df[male_col].sum(), label='Female', color='pink')
 
-        # Customize plot
+        # Show legend only once
+        if not legend_shown:
+            ax.legend()
+            legend_shown = True
         #ax.set_xlabel('Category')
         ax.set_ylabel('Students')
         ax.set_title('Number of Students by level')
@@ -207,14 +210,12 @@ if data is not None:
         bars = plt.bar(district_data['district'], district_data['total_boarding_students'], color='skyblue')
         #plt.xlabel('District')
         plt.ylabel(' Boarding Students')
-        plt.title('Total Boarding Students')
+        plt.title('Boarding students by district')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
         plt.grid(visible=False)
         return plt
     #boarding_students_per_district(data)
-
-
 
     #STEM students
     def stem_students_per_district(data):
@@ -535,12 +536,12 @@ if category == "SCHOOL INFRASTRUCTURE":
         
         
 elif category=="STUDENTS":
-   tab1, tab2, tab3,tab4= st.tabs(["Students by level", "Students by Boarding status", "Stem status ","Deliberation"])
+   tab1, tab2, tab3,tab4= st.tabs(["Students by level", "Boarding students by district", "Stem status ","Deliberation"])
    with tab1:
         st.write("Students  by level")
         st.pyplot(plot_students_by_level(data))
    with tab2:
-       st.write("Students by boarding status")
+       st.write("Boarding students by district")
        st.pyplot(boarding_students_per_district(data))
    with tab3:
        st.write("Students by STEM status")
