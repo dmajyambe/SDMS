@@ -137,54 +137,59 @@ if data is not None:
         plt.grid(visible=False)
         plt.xticks(rotation=45, ha='right')
         return plt
-#     # """Students"""
+
 
     def plot_students_by_level(data):
-        categories = [
-            "preprimary_students",
-            "tvet_l1_to_l2_students",
-            "Prof_sec_students",
-            "tvet_l3_to_l5_students",
-            "upper_secondary_students",
-            "lower_secondary_students",
-            "primary_students",
-            "ttc_students",
-            "nursing_students",
-            "accounting_students"
-        ]
+        data_new = data[[
+            "preprimary_students_total",
+            "preprimary_students_male",
+            "preprimary_students_female",
+            "Prof_sec_students_total",
+            "Prof_sec_students_male",
+            "Prof_sec_students_female",
+            "upper_secondary_students_total",
+            "upper_secondary_students_male",
+            "upper_secondary_students_female",
+            "lower_secondary_students_total",
+            "lower_secondary_students_male",
+            "lower_secondary_students_female",
+            "primary_students_total",
+            "primary_students_male",
+            "primary_students_female"
+        ]]
 
-        # Create a DataFrame to store the data
-        df = pd.DataFrame({'Category': categories})
+        data_new['tvet_students_male'] = data['tvet_l3_to_l5_students_male'] + data['tvet_l1_to_l2_students_male']
+        data_new['tvet_students_female'] = data['tvet_l3_to_l5_students_female'] + data['tvet_l1_to_l2_students_female']
+        data_new['tvet_students_total'] = data_new['tvet_students_male'] + data_new['tvet_students_female']
 
-        # Loop through categories and add columns for male and female students
-        for category in categories:
-            male_col = f"{category}_male"
-            female_col = f"{category}_female"
+        # Create a DataFrame
+        df = pd.DataFrame(data_new)
 
-            # Sum the male and female students for each category
-            df[category] = data[[male_col, female_col]].sum(axis=1)
-
-        # Sum the male and female students across all levels
-        numeric_columns = df.select_dtypes(include='number').columns
-        df['All Levels'] = df[numeric_columns].sum(axis=1)
-
-        # Sort the DataFrame in descending order based on the total number of students
-        df = df.sort_values(by='All Levels', ascending=False)
+        # Sort categories in descending order based on total students
+        categories = df.columns.str.extract(r'(.+)_[a-z]+$', expand=False).unique()
+        sorted_categories = sorted(categories, key=lambda x: df[f"{x}_total"].sum(), reverse=True)
 
         # Plotting
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(df['Category'], df['All Levels'], color='skyblue', label='Male')
-        bars2 = plt.bar(df['Category'], df['All Levels'], color='lightcoral', label='Female', bottom=df['All Levels'])
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-        plt.xlabel('Level')
-        plt.ylabel('Total Students')
-        plt.title('Students by Level')
-        plt.xticks(rotation=45, ha='right')
-        plt.legend()
+        for category in sorted_categories:
+            male_col = f"{category}_male"
+            female_col = f"{category}_female"
+            total_col = f"{category}_total"
+
+            ax.bar(category, df[male_col].sum(), label='Male', color='blue')
+            ax.bar(category, df[female_col].sum(), bottom=df[male_col].sum(), label='Female', color='pink')
+
+        # Customize plot
+        #ax.set_xlabel('Category')
+        ax.set_ylabel('Students')
+        ax.set_title('Number of Students by level')
         plt.grid(visible=False)
 
+        plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        #print("it reaches students by level")
+        ax.legend()
+
         return plt
     #plot_students_by_level(data)
     #boarding students
@@ -408,7 +413,8 @@ if category == "SCHOOL INFRASTRUCTURE":
     a3.metric("Lower Sec PCR", f"{Lower_sec_PCR}")
     a4.metric("Gen Upper Sec PCR", f"{General_Upper_PCR}")
     a5.metric("TVET L1-L2 PCR", f"{TVET_L1_L2_PCR}")
-    a6.metric("TVET L3-L5 PCR", f"{TVET_L3_L5_PCR}")
+    a6.metric("TVET L3-L5 PCR", f"{TVET_L3_L5_PCR}")\
+    
     tab1,tab2,tab3=st.tabs(["PCR per district",'PTR by level','School setting'])
     with  tab1:
         if st.checkbox("Show PCR table"):
@@ -545,7 +551,40 @@ elif category=="STUDENTS":
        
 #school staff
 elif category=="SCHOOL STAFF":
-    tab1,tab2,tab3=st.tabs(['Teaching staff by district','Unassigned Teachers','Pupil Teacher Ratio'])
+    #PTR
+    with open('style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    st.markdown("Pupil Teacher ratio")
+    b1, b2 ,b3,b4,b5,b6= st.columns(6)
+
+        # PTR for Preprimary
+    PTR_Preprimary = round(data['preprimary_students_total'].sum() / data['total_preprimary_teachers'].sum())
+    b1.metric("Preprimary PTR", f"{PTR_Preprimary}")
+
+    # PTR for Primary
+    PTR_Primary = round(data['primary_students_total'].sum() / data['total_primary_teachers'].sum())
+    b2.metric("Primary PTR", f"{PTR_Primary}")
+
+    # PTR for Lower Secondary
+    PTR_Lower_Sec = round(data['lower_secondary_students_total'].sum() / data['total_lower_secondary_teachers'].sum())
+    b3.metric("Lower Secondary PTR", f"{PTR_Lower_Sec}")
+
+    # PTR for Upper Secondary
+    PTR_Upper_Sec = round(data['upper_secondary_students_total'].sum() / data['total_upper_secondary_teachers'].sum())
+    b4.metric("Upper Secondary PTR", f"{PTR_Upper_Sec}")
+
+    # PTR for Professional Secondary
+    PTR_Prof_Sec = round(data['Prof_sec_students_total'].sum() / data['Prof_sec_teacher_total'].sum())
+    b5.metric("Professional Secondary PTR", f"{PTR_Prof_Sec}")
+
+    # Calculate total TVET students
+    tvet_students_total = data['tvet_l1_to_l2_students_total'].sum() + data['tvet_l3_to_l5_students_total'].sum()
+
+    # PTR for TVET
+    PTR_tvet = round(tvet_students_total / data['total_tvet_teachers'].sum())
+    b6.metric("TVET PTR", f"{PTR_tvet}")
+
+    tab1,tab2=st.tabs(['Teaching staff by district','Unassigned Teachers'])
     with tab1:
         st.write("Teaching staff by district")
         st.pyplot(plot_teaching_staff_by_district(data))
@@ -580,9 +619,7 @@ elif category=="SCHOOL STAFF":
     with tab2:
         st.write("Total Unassigned Teachers by district")
         st.pyplot(plot_unassigned_teachers_by_district(data))
-    with tab3:
-        st.write("Pupil Teacher Ratios")
-        st.pyplot(plot_pupil_teacher_ratios(data))
+    
 elif category=="ENERGY, WATER AND SANITATION":
     tab1,tab2,tab3,tab4=st.tabs(['Water supply in schools','Toilets',"Handwashing","Energy"])
     with tab1:
@@ -753,7 +790,6 @@ elif category=="ICT, SCIENCE AND TECHNOLOGY":
             plt.tight_layout()
             plt.grid(visible=False)
             return plt
-            
         else:
             print("The 'smart_classrooms' column is not available in the dataset.")
 
