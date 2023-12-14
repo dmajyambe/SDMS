@@ -171,8 +171,10 @@ if data is not None:
 
         # Plotting
         fig, ax = plt.subplots(figsize=(12, 6))
+        legend_shown = [False]  # Use a list to store the state to make it mutable
 
-        for category in sorted_categories:
+        def plot_bars(category):
+            nonlocal legend_shown  # Use nonlocal to modify the outer variable
             male_col = f"{category}_male"
             female_col = f"{category}_female"
             total_col = f"{category}_total"
@@ -180,20 +182,24 @@ if data is not None:
             ax.bar(category, df[male_col].sum(), label='Male', color='blue')
             ax.bar(category, df[female_col].sum(), bottom=df[male_col].sum(), label='Female', color='pink')
 
-        # Show legend only once
-        if not legend_shown:
-            ax.legend()
-            legend_shown = True
+            # Show legend only once
+            if not legend_shown[0]:
+                ax.legend()
+                legend_shown[0] = True
+
+        for category in sorted_categories:
+            plot_bars(category)
+
+        # Customize plot
         #ax.set_xlabel('Category')
-        ax.set_ylabel('Students')
-        ax.set_title('Number of Students by level')
-        plt.grid(visible=False)
+        ax.set_ylabel('Number of Students')
+        ax.set_title('Number of Students by Level')
 
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        ax.legend()
-
+        plt.grid(visible=False)
         return plt
+
     #plot_students_by_level(data)
     #boarding students
 
@@ -536,7 +542,7 @@ if category == "SCHOOL INFRASTRUCTURE":
         
         
 elif category=="STUDENTS":
-   tab1, tab2, tab3,tab4= st.tabs(["Students by level", "Boarding students by district", "Stem status ","Deliberation"])
+   tab1, tab2, tab3,tab4= st.tabs(["Students by level", "Boarding students by district", "Stem students by district ","Deliberation"])
    with tab1:
         st.write("Students  by level")
         st.pyplot(plot_students_by_level(data))
@@ -544,7 +550,7 @@ elif category=="STUDENTS":
        st.write("Boarding students by district")
        st.pyplot(boarding_students_per_district(data))
    with tab3:
-       st.write("Students by STEM status")
+       st.write("Stem students by district")
        st.pyplot(stem_students_per_district(data))
    with tab4:
        st.write("Students without deliberation")
