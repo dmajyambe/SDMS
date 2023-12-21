@@ -199,6 +199,26 @@ if data is not None:
         plt.tight_layout()
         plt.grid(visible=False)
         return plt
+    
+
+    def plot_students_per_district(data):
+            # Group data by district and calculate total students
+        students_per_district = data.groupby('district')['total_students'].sum().reset_index()
+
+            # Sort data by total students in descending order
+        students_per_district = students_per_district.sort_values(by='total_students', ascending=False)
+
+            # Plotting
+        plt.figure(figsize=(12, 6))
+        plt.bar(students_per_district['district'], students_per_district['total_students'], color='skyblue')
+        # plt.xlabel('District')
+        plt.ylabel('Total Students')
+        plt.title('Total Students by district')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.grid(visible=False)
+        return plt 
+
 
     #plot_students_by_level(data)
     #boarding students
@@ -422,7 +442,7 @@ if category == "SCHOOL INFRASTRUCTURE":
     a5.metric("TVET L1-L2 PCR", f"{TVET_L1_L2_PCR}")
     a6.metric("TVET L3-L5 PCR", f"{TVET_L3_L5_PCR}")\
     
-    tab1,tab2,tab3=st.tabs(["PCR per district",'PTR by level','School setting'])
+    tab1,tab3=st.tabs(["PCR per district",'School setting'])
     with  tab1:
         if st.checkbox("Show PCR table"):
             def compute_overall_pcr(data):
@@ -435,8 +455,144 @@ if category == "SCHOOL INFRASTRUCTURE":
                 #st.write("Overall Pupil Classroom Ratio (PCR) by District:")
                 st.table(overall_pcr[['district', 'pcr']].set_index('district'))
             compute_overall_pcr(data)
+    
+
+    with tab3:
+        schools_count = data.groupby(['school_settings', 'school_status']).size().unstack(fill_value=0)
+        st.write('Schools by school setting and status')
+        show_table = st.checkbox("Here is the table")
+        if show_table:
+         st.table(schools_count) # show table for schools by school setting 
+    #create tabs for different categories
+    tab1, tab2, tab3,tab4, = st.tabs([ "Boarding status", "Shift program","Classrooms","Desks"])
+    with tab1:
+        st.write("Schools boarding status")
+        boarding_status_counts = data['boarding_status'].value_counts()
+            # Create a donut chart
+        fig, ax = plt.subplots()
+        ax.pie(boarding_status_counts, labels=boarding_status_counts.index, autopct='%1.1f%%', startangle=90, pctdistance=0.85, wedgeprops=dict(width=0.4))
+        ax.axis('equal')
+        ax.legend(boarding_status_counts.index, title="Boarding Status", loc="center left", bbox_to_anchor=(1, 0.5))
+        st.pyplot(fig)
+        show_table2=st.checkbox("Check to show schools missing boarding status")
+        if show_table2:
+            empty_boarding_status = data[data['boarding_status'].isna()]
+            st.table(empty_boarding_status['school_name'])
+
     with tab2:
-        if st.checkbox("Show PTR table"):
+        st.write("Schools with doubleshift")
+        st.pyplot(double_shift(data))
+    with tab3:
+        #classrooms_checkbox = st.checkbox("Show classrooms in use", value=True)
+        #classrooms_not_in_use_chec=st.checkbox("Show classrooms not in use",value=True)
+        #if classrooms_checkbox:
+        st.write("Classrooms in use per district")
+        st.pyplot(plot_classrooms_per_district(data))
+        #if classrooms_not_in_use_chec:
+        st.write("Classrooms not in use per district")
+        st.pyplot(plot_classrooms_not_in_use(data))
+    with tab4:
+        st.write("Desks not in use per district")
+        st.pyplot(desks_not_in_use_plot(data))
+        show_table3=st.checkbox("Check to show schools with desks not in use")
+        if show_table3:
+            schools_with_desks_not_in_use = data[data['number_of_desks_not_in_use'].notna()]
+            st.table(schools_with_desks_not_in_use[['district','school_name']])    
+        st.write("Desks in use per district")
+        st.pyplot(desks_in_use_plot(data))
+        
+        
+elif category=="STUDENTS":
+   tab1, tab2, tab3,tab4= st.tabs(["Total Students", "Boarding students by district", "Stem students by district ","Deliberation"])
+   with tab1:
+        st.write("Students by district")
+        st.pyplot(plot_students_per_district(data))
+        st.write("Students  by level")
+        st.pyplot(plot_students_by_level(data))
+        
+   with tab2:
+       st.write("Boarding students by district")
+       st.pyplot(boarding_students_per_district(data))
+   with tab3:
+       st.write("Stem students by district")
+       st.pyplot(stem_students_per_district(data))
+   with tab4:
+       st.write("Students without deliberation")
+       st.pyplot(deliberation_decisions(data))
+       
+#school staff
+elif category=="SCHOOL STAFF":
+    #PTR
+    with open('style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    st.markdown("Pupil Teacher ratio")
+    b1, b2 ,b3,b4,b5,b6= st.columns(6)
+
+        # PTR for Preprimary
+    PTR_Preprimary = round(data['preprimary_students_total'].sum() / data['total_preprimary_teachers'].sum())
+    b1.metric("Preprimary PTR", f"{PTR_Preprimary}")
+
+    # PTR for Primary
+    PTR_Primary = round(data['primary_students_total'].sum() / data['total_primary_teachers'].sum())
+    b2.metric("Primary PTR", f"{PTR_Primary}")
+
+    # PTR for Lower Secondary
+    PTR_Lower_Sec = round(data['lower_secondary_students_total'].sum() / data['total_lower_secondary_teachers'].sum())
+    b3.metric("Lower Secondary PTR", f"{PTR_Lower_Sec}")
+
+    # PTR for Upper Secondary
+    PTR_Upper_Sec = round(data['upper_secondary_students_total'].sum() / data['total_upper_secondary_teachers'].sum())
+    b4.metric("Upper Secondary PTR", f"{PTR_Upper_Sec}")
+
+    # PTR for Professional Secondary
+    PTR_Prof_Sec = round(data['Prof_sec_students_total'].sum() / data['Prof_sec_teacher_total'].sum())
+    b5.metric("Professional Secondary PTR", f"{PTR_Prof_Sec}")
+
+    # Calculate total TVET students
+    tvet_students_total = data['tvet_l1_to_l2_students_total'].sum() + data['tvet_l3_to_l5_students_total'].sum()
+
+    # PTR for TVET
+    PTR_tvet = round(tvet_students_total / data['total_tvet_teachers'].sum())
+    b6.metric("TVET PTR", f"{PTR_tvet}")
+
+    tab1,tab2,tab3=st.tabs(['Teaching staff by district','Unassigned Teachers',"PTR by district"])
+    with tab1:
+        st.write("Teaching staff by district")
+        st.pyplot(plot_teaching_staff_by_district(data))
+        st.write("Administrative staff")
+        st.pyplot(plot_administrative_staff_by_status(data))
+        checkbox=st.checkbox("Check to display the table for administrative staff")
+        if checkbox:
+    
+            # Select relevant columns
+            admin_data = data[['district', 'administrative_staff_male', 'administrative_staff_female', 'total_administrative_staff']]
+
+    # Group by district and calculate totals
+            admin_totals = admin_data.groupby('district').sum().reset_index()
+
+    # Add a row for overall totals
+            overall_totals = pd.DataFrame({'district': ['Total'],
+                                   'administrative_staff_male': admin_totals['administrative_staff_male'].sum(),
+                                   'administrative_staff_female': admin_totals['administrative_staff_female'].sum(),
+                                   'total_administrative_staff': admin_totals['total_administrative_staff'].sum()})
+
+    # Format columns to remove trailing zeros and add thousand separators
+            for col in ['administrative_staff_male', 'administrative_staff_female', 'total_administrative_staff']:
+                admin_totals[col] = admin_totals[col].apply(lambda x: '{:,.0f}'.format(x).rstrip('0').rstrip('.') if pd.notna(x) else x)
+                overall_totals[col] = overall_totals[col].apply(lambda x: '{:,.0f}'.format(x).rstrip('0').rstrip('.') if pd.notna(x) else x)
+
+    # Concatenate the overall totals row to the grouped data
+            admin_data_with_totals = pd.concat([admin_totals, overall_totals], ignore_index=True)
+
+    # Display the data in a table using Streamlit
+            st.table(admin_data_with_totals)
+
+    with tab2:
+        st.write("Total Unassigned Teachers by district")
+        st.pyplot(plot_unassigned_teachers_by_district(data))
+    with tab3:
+        ptr_checkbox=st.checkbox('Show PTR Table')
+        if ptr_checkbox:
             def compute_ptr_by_level(data):
         # Ensure numeric columns are treated as numeric
                 numeric_cols = [
@@ -494,138 +650,6 @@ if category == "SCHOOL INFRASTRUCTURE":
 
             st.write("Combined Pupil Teacher Ratio (PTR) by District:")
             st.table(ptr_table)
-            
-
-    with tab3:
-        schools_count = data.groupby(['school_settings', 'school_status']).size().unstack(fill_value=0)
-        st.write('Schools by school setting and status')
-        show_table = st.checkbox("Here is the table")
-        if show_table:
-         st.table(schools_count) # show table for schools by school setting 
-    #create tabs for different categories
-    tab1, tab2, tab3,tab4, = st.tabs([ "Boarding status", "Shift program","Classrooms","Desks"])
-    with tab1:
-        st.write("Schools boarding status")
-        boarding_status_counts = data['boarding_status'].value_counts()
-            # Create a donut chart
-        fig, ax = plt.subplots()
-        ax.pie(boarding_status_counts, labels=boarding_status_counts.index, autopct='%1.1f%%', startangle=90, pctdistance=0.85, wedgeprops=dict(width=0.4))
-        ax.axis('equal')
-        ax.legend(boarding_status_counts.index, title="Boarding Status", loc="center left", bbox_to_anchor=(1, 0.5))
-        st.pyplot(fig)
-        show_table2=st.checkbox("Check to show schools missing boarding status")
-        if show_table2:
-            empty_boarding_status = data[data['boarding_status'].isna()]
-            st.table(empty_boarding_status['school_name'])
-
-    with tab2:
-        st.write("Schools with doubleshift")
-        st.pyplot(double_shift(data))
-    with tab3:
-        #classrooms_checkbox = st.checkbox("Show classrooms in use", value=True)
-        #classrooms_not_in_use_chec=st.checkbox("Show classrooms not in use",value=True)
-        #if classrooms_checkbox:
-        st.write("Classrooms in use per district")
-        st.pyplot(plot_classrooms_per_district(data))
-        #if classrooms_not_in_use_chec:
-        st.write("Classrooms not in use per district")
-        st.pyplot(plot_classrooms_not_in_use(data))
-    with tab4:
-        st.write("Desks not in use per district")
-        st.pyplot(desks_not_in_use_plot(data))
-        show_table3=st.checkbox("Check to show schools with desks not in use")
-        if show_table3:
-            schools_with_desks_not_in_use = data[data['number_of_desks_not_in_use'].notna()]
-            st.table(schools_with_desks_not_in_use[['district','school_name']])    
-        st.write("Desks in use per district")
-        st.pyplot(desks_in_use_plot(data))
-        
-        
-elif category=="STUDENTS":
-   tab1, tab2, tab3,tab4= st.tabs(["Students by level", "Boarding students by district", "Stem students by district ","Deliberation"])
-   with tab1:
-        st.write("Students  by level")
-        st.pyplot(plot_students_by_level(data))
-   with tab2:
-       st.write("Boarding students by district")
-       st.pyplot(boarding_students_per_district(data))
-   with tab3:
-       st.write("Stem students by district")
-       st.pyplot(stem_students_per_district(data))
-   with tab4:
-       st.write("Students without deliberation")
-       st.pyplot(deliberation_decisions(data))
-       
-#school staff
-elif category=="SCHOOL STAFF":
-    #PTR
-    with open('style.css') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    st.markdown("Pupil Teacher ratio")
-    b1, b2 ,b3,b4,b5,b6= st.columns(6)
-
-        # PTR for Preprimary
-    PTR_Preprimary = round(data['preprimary_students_total'].sum() / data['total_preprimary_teachers'].sum())
-    b1.metric("Preprimary PTR", f"{PTR_Preprimary}")
-
-    # PTR for Primary
-    PTR_Primary = round(data['primary_students_total'].sum() / data['total_primary_teachers'].sum())
-    b2.metric("Primary PTR", f"{PTR_Primary}")
-
-    # PTR for Lower Secondary
-    PTR_Lower_Sec = round(data['lower_secondary_students_total'].sum() / data['total_lower_secondary_teachers'].sum())
-    b3.metric("Lower Secondary PTR", f"{PTR_Lower_Sec}")
-
-    # PTR for Upper Secondary
-    PTR_Upper_Sec = round(data['upper_secondary_students_total'].sum() / data['total_upper_secondary_teachers'].sum())
-    b4.metric("Upper Secondary PTR", f"{PTR_Upper_Sec}")
-
-    # PTR for Professional Secondary
-    PTR_Prof_Sec = round(data['Prof_sec_students_total'].sum() / data['Prof_sec_teacher_total'].sum())
-    b5.metric("Professional Secondary PTR", f"{PTR_Prof_Sec}")
-
-    # Calculate total TVET students
-    tvet_students_total = data['tvet_l1_to_l2_students_total'].sum() + data['tvet_l3_to_l5_students_total'].sum()
-
-    # PTR for TVET
-    PTR_tvet = round(tvet_students_total / data['total_tvet_teachers'].sum())
-    b6.metric("TVET PTR", f"{PTR_tvet}")
-
-    tab1,tab2=st.tabs(['Teaching staff by district','Unassigned Teachers'])
-    with tab1:
-        st.write("Teaching staff by district")
-        st.pyplot(plot_teaching_staff_by_district(data))
-        st.write("Administrative staff")
-        st.pyplot(plot_administrative_staff_by_status(data))
-        checkbox=st.checkbox("Check to display the table for administrative staff")
-        if checkbox:
-    
-            # Select relevant columns
-            admin_data = data[['district', 'administrative_staff_male', 'administrative_staff_female', 'total_administrative_staff']]
-
-    # Group by district and calculate totals
-            admin_totals = admin_data.groupby('district').sum().reset_index()
-
-    # Add a row for overall totals
-            overall_totals = pd.DataFrame({'district': ['Total'],
-                                   'administrative_staff_male': admin_totals['administrative_staff_male'].sum(),
-                                   'administrative_staff_female': admin_totals['administrative_staff_female'].sum(),
-                                   'total_administrative_staff': admin_totals['total_administrative_staff'].sum()})
-
-    # Format columns to remove trailing zeros and add thousand separators
-            for col in ['administrative_staff_male', 'administrative_staff_female', 'total_administrative_staff']:
-                admin_totals[col] = admin_totals[col].apply(lambda x: '{:,.0f}'.format(x).rstrip('0').rstrip('.') if pd.notna(x) else x)
-                overall_totals[col] = overall_totals[col].apply(lambda x: '{:,.0f}'.format(x).rstrip('0').rstrip('.') if pd.notna(x) else x)
-
-    # Concatenate the overall totals row to the grouped data
-            admin_data_with_totals = pd.concat([admin_totals, overall_totals], ignore_index=True)
-
-    # Display the data in a table using Streamlit
-            st.table(admin_data_with_totals)
-
-    with tab2:
-        st.write("Total Unassigned Teachers by district")
-        st.pyplot(plot_unassigned_teachers_by_district(data))
     
 elif category=="ENERGY, WATER AND SANITATION":
     tab1,tab2,tab3,tab4=st.tabs(['Water supply in schools','Toilets',"Handwashing","Energy"])
@@ -807,7 +831,7 @@ else:
     def plot_schools_with_special_girls_room(data):
         if 'specialgirlsroom' in data.columns:
             total_schools_per_district = data.groupby('district').size().reset_index(name='total_schools')
-            schools_with_special_girls_room = data[data['specialgirlsroom'] == 1].groupby('district').size().reset_index(name='special_girls_schools')
+            schools_with_special_girls_room = data[data['specialgirlsroom'] != 0].groupby('district').size().reset_index(name='special_girls_schools')
             merged_data = pd.merge(total_schools_per_district, schools_with_special_girls_room, how='left', on='district')
             merged_data['special_girls_schools'] = merged_data['special_girls_schools'].fillna(0)
             merged_data = merged_data.sort_values(by='total_schools', ascending=False)
@@ -816,9 +840,9 @@ else:
             plt.figure(figsize=(12, 6))
             plt.bar(merged_data['district'], merged_data['total_schools'], color='lightgray', label='Total Schools')
             plt.bar(merged_data['district'], merged_data['special_girls_schools'], color='skyblue', label='Special Girls Schools')
-            #plt.xlabel('District')
+            plt.xlabel('District')
             plt.ylabel('Number of Schools')
-            plt.title('Schools with special girls room')
+            plt.title('Schools with Special Girls Room')
             plt.xticks(rotation=45, ha='right')
             plt.legend()
             plt.tight_layout()
@@ -826,6 +850,5 @@ else:
             return plt
         else:
             print("The 'specialgirlsroom' column is not available in the dataset.")
-
 
     st.pyplot(plot_schools_with_special_girls_room(data))
